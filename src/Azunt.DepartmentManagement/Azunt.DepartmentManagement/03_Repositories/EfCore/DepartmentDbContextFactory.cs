@@ -4,25 +4,28 @@ using Microsoft.Extensions.Configuration;
 namespace Azunt.DepartmentManagement;
 
 /// <summary>
-/// DepartmentDbContext 인스턴스를 생성하는 Factory 클래스
+/// EF Core DbContext를 생성하는 Factory 클래스
 /// </summary>
 public class DepartmentDbContextFactory
 {
     private readonly IConfiguration? _configuration;
+    private readonly DbProvider _dbProvider;
 
     /// <summary>
-    /// 기본 생성자 (Configuration 없이 사용 가능)
+    /// 기본 생성자 (Configuration 없이, 기본 Provider는 SqlServer)
     /// </summary>
     public DepartmentDbContextFactory()
     {
+        _dbProvider = DbProvider.SqlServer;
     }
 
     /// <summary>
-    /// IConfiguration을 주입받는 생성자
+    /// IConfiguration과 DbProvider를 주입받는 생성자
     /// </summary>
-    public DepartmentDbContextFactory(IConfiguration configuration)
+    public DepartmentDbContextFactory(IConfiguration configuration, DbProvider dbProvider = DbProvider.SqlServer)
     {
         _configuration = configuration;
+        _dbProvider = dbProvider;
     }
 
     /// <summary>
@@ -35,11 +38,21 @@ public class DepartmentDbContextFactory
             throw new ArgumentException("Connection string must not be null or empty.", nameof(connectionString));
         }
 
-        var options = new DbContextOptionsBuilder<DepartmentDbContext>()
-            .UseSqlServer(connectionString)
-            .Options;
+        var optionsBuilder = new DbContextOptionsBuilder<DepartmentDbContext>();
 
-        return new DepartmentDbContext(options);
+        switch (_dbProvider)
+        {
+            case DbProvider.SqlServer:
+                optionsBuilder.UseSqlServer(connectionString);
+                break;
+            case DbProvider.Sqlite:
+                optionsBuilder.UseSqlite(connectionString);
+                break;
+            default:
+                throw new InvalidOperationException($"Unsupported database provider: {_dbProvider}");
+        }
+
+        return new DepartmentDbContext(optionsBuilder.Options);
     }
 
     /// <summary>
@@ -71,4 +84,13 @@ public class DepartmentDbContextFactory
 
         return CreateDbContext(defaultConnection);
     }
+}
+
+/// <summary>
+/// EF Core에서 사용할 데이터베이스 Provider 종류
+/// </summary>
+public enum DbProvider
+{
+    SqlServer,
+    Sqlite
 }
