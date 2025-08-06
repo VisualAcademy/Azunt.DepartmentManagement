@@ -15,18 +15,32 @@ namespace Azunt.DepartmentManagement
         public DepartmentDbContext(DbContextOptions<DepartmentDbContext> options)
             : base(options)
         {
+            // 기본적으로 NoTracking으로 설정하여 조회 성능 최적화
             ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
 
         /// <summary>
         /// 데이터베이스 모델을 설정하는 메서드입니다.
+        /// DB Provider에 따라 CreatedAt 기본값을 다르게 설정합니다.
         /// </summary>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Departments 테이블의 CreatedAt 열은 기본값으로 현재 날짜/시간을 사용합니다.
-            modelBuilder.Entity<Department>()
-                .Property(m => m.CreatedAt)
-                .HasDefaultValueSql("GetDate()");
+            var providerName = Database.ProviderName;
+
+            if (!string.IsNullOrEmpty(providerName) && providerName.Contains("SqlServer"))
+            {
+                // SQL Server에서는 GETDATE() 사용
+                modelBuilder.Entity<Department>()
+                    .Property(m => m.CreatedAt)
+                    .HasDefaultValueSql("GETDATE()");
+            }
+            else
+            {
+                // Sqlite 등 다른 DB에서는 CURRENT_TIMESTAMP 사용
+                modelBuilder.Entity<Department>()
+                    .Property(m => m.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            }
         }
 
         /// <summary>
