@@ -62,6 +62,23 @@ builder.Services.AddDependencyInjectionContainerForDepartmentApp(
 
 var app = builder.Build();
 
+
+// -------------------------------------------
+// Sqlite 전용 Departments 테이블 생성/업데이트 호출
+// -------------------------------------------
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    // Master DB용
+    DepartmentsTableBuilderSqlite.Run(services, forMaster: true);
+
+    // Tenant DB용 (멀티테넌트)
+    //DepartmentsTableBuilderSqlite.Run(services, forMaster: false);
+}
+// -------------------------------------------
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
