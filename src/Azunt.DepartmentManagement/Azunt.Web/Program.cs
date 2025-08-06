@@ -1,3 +1,5 @@
+using Azunt.DepartmentManagement;
+using Azunt.Models.Enums;
 using Azunt.Web.Components;
 using Azunt.Web.Components.Account;
 using Azunt.Web.Data;
@@ -34,6 +36,29 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+
+// =======================================================
+// Department 모듈 Sqlite용 DI 등록 (두 가지 방식 중 하나만 사용)
+// =======================================================
+
+// 2. 직접 등록 방식
+//builder.Services.AddDbContext<DepartmentDbContext>(
+//    options => options.UseSqlite(connectionString),  // Sqlite 사용
+//    ServiceLifetime.Transient);
+//
+//builder.Services.AddTransient<IDepartmentRepository, DepartmentRepository>();
+//builder.Services.AddTransient<DepartmentDbContextFactory>();
+
+// 2. 확장 메서드 방식 (권장)
+builder.Services.AddDependencyInjectionContainerForDepartmentApp(
+    connectionString,
+    RepositoryMode.EfCore,          // EF Core 모드
+    DbProvider.Sqlite,              // Sqlite Provider
+    ServiceLifetime.Transient);     // DbContext Lifetime
+
+// =======================================================
+
 
 var app = builder.Build();
 
