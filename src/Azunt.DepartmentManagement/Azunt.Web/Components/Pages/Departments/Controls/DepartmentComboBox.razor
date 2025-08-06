@@ -1,0 +1,58 @@
+﻿@namespace Azunt.Web.Components.Pages.Departments.Controls
+@using Azunt.DepartmentManagement
+@inject IDepartmentRepository DepartmentRepository
+
+<div class="d-flex align-items-center">
+    <select class="form-control" style="width: 250px;" @onchange="OnSelectChanged">
+        <option value="">-- Select a Department --</option>
+        @foreach (var department in DepartmentManager)
+        {
+            <option value="@department" selected="@(department == SelectedDepartment)">
+                @department
+            </option>
+        }
+    </select>
+
+    <span class="mx-2 text-muted">or</span>
+
+    <input class="form-control" type="text" placeholder="Or type a new department..."
+           style="width: 250px;"
+           @bind="SelectedDepartment"
+           @oninput="OnInputChanged" />
+</div>
+
+@code {
+    [Parameter]
+    public string SelectedDepartment { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<string> SelectedDepartmentChanged { get; set; }
+
+    private List<string> DepartmentManager { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var departments = await DepartmentRepository.GetAllAsync();
+        DepartmentManager = departments
+            .Select(d => d.Name ?? "")
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Distinct()
+            .ToList();
+    }
+
+    private async Task OnSelectChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(selected))
+        {
+            SelectedDepartment = selected;
+            await SelectedDepartmentChanged.InvokeAsync(SelectedDepartment);
+        }
+    }
+
+    private async Task OnInputChanged(ChangeEventArgs e)
+    {
+        SelectedDepartment = e.Value?.ToString() ?? "";
+        await SelectedDepartmentChanged.InvokeAsync(SelectedDepartment);
+    }
+}
