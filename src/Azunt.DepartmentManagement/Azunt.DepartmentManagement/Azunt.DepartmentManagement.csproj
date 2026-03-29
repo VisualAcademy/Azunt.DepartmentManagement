@@ -23,7 +23,7 @@
         <RepositoryType>git</RepositoryType>
 
         <!-- 저작권 -->
-        <Copyright>© 2025 Hawaso. All rights reserved.</Copyright>
+        <Copyright>© 2026 Hawaso. All rights reserved.</Copyright>
 
         <!-- README 및 License 파일 지정 -->
         <PackageReadmeFile>README.md</PackageReadmeFile>
